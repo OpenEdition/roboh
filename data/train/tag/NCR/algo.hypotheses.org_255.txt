@@ -1,0 +1,2 @@
+Séminaire d'histoire des mathématiques : prochaine séance
+<enamex><pers>Fabio Acerbi</pers></enamex> (CNRS, UMR 8163) : Trois formes d’argumentation dans les mathématiques grecques : preuves, procédures, algorithmes. Exemplier de la séance Attention ! cette séance, initialement prévue le <timex><time>14 octobre</time></timex>, est reportée à une date ultérieure.
