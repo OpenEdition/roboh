@@ -8,12 +8,20 @@ import os
 import pycurl
 from io import BytesIO
 import json
+import argparse
+import settings as s
 
 
+parser = argparse.ArgumentParser(description='set_tag by Mathieu Orban. Get texts in Open Edition, saved them and tagged them.')
+
+parser.add_argument('-c','--corpus', metavar='MODES', type=str, help='corpus file path')
+parser.add_argument('-s','--site_name', metavar='SITE', type=str, help='site_name of the journal')
+parser.add_argument('-p','--platform', metavar='PLATFORM', type=str, help='platform where you can find documents')
+args = parser.parse_args()
 
 
-def findNumFound(solr, request):
-    results = solr.search(request, **{'rows' : '0'})
+def findNumFound(solr, request, filter_query={'rows' : '0'}):
+    results = solr.search(request, **filter_query)
     return results.hits
 
 
@@ -24,7 +32,8 @@ def getHttpResponse(url, method="GET", list_files=None, content = 'JSON'):
     c.setopt(c.URL, url)
     c.setopt(c.WRITEDATA, buffer)
     c.setopt(c.VERBOSE, 0)
-    c.setopt(c.HTTPHEADER, ['Authorization: Token token=2d1edf7391684877a5b011fe0278806a'])
+    token = s.allgo_key
+    c.setopt(c.HTTPHEADER, ['Authorization: Token token=%s' % token])
     if method == "POST":
         l = [('job[webapp_id]', '2'), ('job[param]', '')]
         l1 = [('files[{}]'.format(i), (c.FORM_FILE, f)) for i, f in enumerate(list_files)]
@@ -33,9 +42,8 @@ def getHttpResponse(url, method="GET", list_files=None, content = 'JSON'):
     elif method == "GET":
         pass
     c.perform()
-    print('status: {} '.format(c.getinfo(c.RESPONSE_CODE)))
+    #print('status: {} '.format(c.getinfo(c.RESPONSE_CODE)))
     response = buffer.getvalue().decode('iso-8859-1')
-    print(type(response))
     c.close()
     buffer.close()
     if content == 'JSON':
@@ -45,11 +53,12 @@ def getHttpResponse(url, method="GET", list_files=None, content = 'JSON'):
     else:
         raise NameError('Give type of answer')
 
-def tagCr():
-    url_solr = url_solr = 'http://147.94.102.100:8983/solr/documents'
-    solr = pysolr.Solr(url_solr, timeout=20)
-    request = 'platformID:HO AND naked_texte:["" TO *] AND site_name:"http://devhist.hypotheses.org"'
-    numFound = findNumFound(solr, request)
+def importAndTag():
+    solr = pysolr.Solr(s.solr_url, timeout=20)
+    platform = args.platform
+    request = 'platformID:%s AND site_name:"%s"' % (args.platform, args.site_name)
+    filter_query = {'fq':'naked_texte:[* TO *]'}
+    numFound = findNumFound(solr, request, filter_query)
     print(numFound)
     stop = numFound
     step = 5
@@ -57,7 +66,6 @@ def tagCr():
     for i in range(0, stop, step):
         print(i)
         results = solr.search(request, **{'rows':step, 'start':i, 'sort':'id DESC'})
-        print(len(results))
         (list_files, list_files_result) = saveInputFiles(results)
         links = getLinkResult(list_files, list_files_result)
         saveOutputFiles(links)
@@ -65,7 +73,7 @@ def tagCr():
 def saveInputFiles(results):
     list_files = []
     list_files_result = []
-    directory = './corpustest/no_tag/'
+    directory = ''.join((args.corpus, 'no_tag/'))
     if not os.path.exists(directory):
         os.makedirs(directory)
     for result in results:
@@ -80,16 +88,16 @@ def saveInputFiles(results):
         with open('{}'.format(write_path), mode) as f:
             f.write(result['naked_texte'])
         list_files.append(write_path)
-    print(list_files, list_files_result)
     return list_files, list_files_result
 
 
 def getLinkResult(list_files, list_files_result):
-    resp = getHttpResponse('https://allgo.inria.fr/api/v1/jobs', 'POST', list_files)
+    resp = getHttpResponse(s.allgo_url, 'POST', list_files)
     url_id = resp['url']
     job_id = resp['id']
     resp ={}
     resp_status = "in progress"
+    print("Inria Allgo processing your job : %s" % job_id)
     while resp_status == 'in progress':
         resp = getHttpResponse(url_id)
         if resp.get('status') == 'in progress':
@@ -97,11 +105,10 @@ def getLinkResult(list_files, list_files_result):
         else:
             break
     links = [(f, resp[str(job_id)]['{}'.format(f)]) for f in list_files_result]
-    print(links)
     return links
 
 def saveOutputFiles(links):
-    directory = './corpustest/tag/'
+    directory = ''.join((args.corpus, 'tag/'))
     if not os.path.exists(directory):
         os.makedirs(directory)
     for file_tag in links:
@@ -125,5 +132,5 @@ def latinToUnicode(tmpfile):
                 ouf.write(converted)
 
 if __name__ == '__main__':
-    tagCr()
+    importAndTag()
 
