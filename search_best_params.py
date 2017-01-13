@@ -12,7 +12,7 @@ from sklearn.grid_search import GridSearchCV
 from sklearn.pipeline import Pipeline
 
 list_stop_words = []
-with open('stop_tartarus.txt', "r") as f:
+with open('stop_list_fr.txt', "r") as f:
     list_stop_words = [ st.rstrip() for st in f.readlines()]
 
 # Display progress logs on stdout
