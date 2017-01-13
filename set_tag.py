@@ -10,127 +10,134 @@ from io import BytesIO
 import json
 import argparse
 import settings as s
+from nerd import nerd
+from echosocket import annotator 
 
 
 parser = argparse.ArgumentParser(description='set_tag by Mathieu Orban. Get texts in Open Edition, saved them and tagged them.')
 
+parser.add_argument('-d','--datasource', metavar='DATASOURCE', type=str, help='source required')
 parser.add_argument('-c','--corpus', metavar='MODES', type=str, help='corpus file path')
 parser.add_argument('-s','--site_name', metavar='SITE', type=str, help='site_name of the journal')
 parser.add_argument('-p','--platform', metavar='PLATFORM', type=str, help='platform where you can find documents')
 args = parser.parse_args()
 
 
-def findNumFound(solr, request, filter_query={'rows' : '0'}):
-    results = solr.search(request, **filter_query)
-    return results.hits
+class DataSource(object):
+    def __init__(self):
+        self.source_name = args.datasource
+        self.corpus_dir = args.corpus
+
+    def importSource(self, *args):
+        files = self.data_source.importSource(*args)
+        self.__setattr__('files', files) 
+
+    def echoData(self):
+        for name_id, opinion_txt in annotator.annotator(self.files).items():
+            print(name_id, opinion_txt)
+            path='{}/{}'.format(self.corpus_dir, name_id)
+            with open(path, 'r+') as f:
+                f.seek(0,2)
+                f.write('\n{}'.format(json.dumps(opinion_txt)))
+
+    def tagData(self):
+        n = nerd.NERD('nerd.eurecom.fr', s.nerd_api_key)
+        time_out = 30 
+        for base_name, text in self.files:
+            path='{}/{}'.format(self.corpus_dir, base_name)
+            with open(path, 'r+') as f:
+                lines = f.readlines()
+                print(len(lines))
+                #In case of multi lines on one file
+                '''single_line = '\t'.join([line.strip() for line in lines])
+                f.write(single_line)'''
+                data = n.extract(text, 'combined', time_out)
+                f.seek(0,2)
+                f.write('\n{}'.format(data))
 
 
-def getHttpResponse(url, method="GET", list_files=None, content = 'JSON'):
-    buffer = BytesIO()
-    c = pycurl.Curl()
-    #Send file to process
-    c.setopt(c.URL, url)
-    c.setopt(c.WRITEDATA, buffer)
-    c.setopt(c.VERBOSE, 0)
-    token = s.allgo_key
-    c.setopt(c.HTTPHEADER, ['Authorization: Token token=%s' % token])
-    if method == "POST":
-        l = [('job[webapp_id]', '2'), ('job[param]', '')]
-        l1 = [('files[{}]'.format(i), (c.FORM_FILE, f)) for i, f in enumerate(list_files)]
-        l.extend(l1)
-        c.setopt(c.HTTPPOST, l)
-    elif method == "GET":
-        pass
-    c.perform()
-    #print('status: {} '.format(c.getinfo(c.RESPONSE_CODE)))
-    response = buffer.getvalue().decode('iso-8859-1')
-    c.close()
-    buffer.close()
-    if content == 'JSON':
-        return json.loads(response)
-    elif content == 'NOT JSON':
-        return response
-    else:
-        raise NameError('Give type of answer')
 
-def importAndTag():
-    solr = pysolr.Solr(s.solr_url, timeout=20)
-    platform = args.platform
-    request = 'platformID:%s AND site_name:"%s"' % (args.platform, args.site_name)
-    filter_query = {'fq':'naked_texte:[* TO *]'}
-    numFound = findNumFound(solr, request, filter_query)
-    print(numFound)
-    stop = numFound
-    step = 5
-    # Get results by data bundle
-    for i in range(0, stop, step):
-        print(i)
-        results = solr.search(request, **{'rows':step, 'start':i, 'sort':'id DESC'})
-        (list_files, list_files_result) = saveInputFiles(results)
-        links = getLinkResult(list_files, list_files_result)
-        saveOutputFiles(links)
+def factory():
+    if args.datasource == 'solr':
+        return SolrSource()
+    elif args.datasource == 'text':
+        return TextSource()
 
-def saveInputFiles(results):
-    list_files = []
-    list_files_result = []
-    directory = ''.join((args.corpus, 'no_tag/'))
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-    for result in results:
-        name_id = ''.join((result['id'].replace('http://','').replace('/','_'), '.txt'))
-        nero_name_id = name_id.replace('.txt', '_nero.txt')
-        list_files_result.append(nero_name_id)
-        write_path='{}/{}'.format(directory, name_id)
-        if not os.path.exists('./{}'.format(write_path)):
-            mode = 'a'
-        else:
-            mode = 'w'
-        with open('{}'.format(write_path), mode) as f:
-            f.write(result['naked_texte'])
-        list_files.append(write_path)
-    return list_files, list_files_result
+class SolrSource(DataSource):
+    def __init__(self):
+        super(SolrSource, self).__init__()
+        self._solr =pysolr.Solr(s.solr_url, timeout=20)
+        
+
+    def importSource(self, writefile= True):
+        platform = args.platform
+        request = 'platformID:%s AND site_name:"%s"' % (args.platform, args.site_name)
+        filter_query = {'fq':'naked_texte:[* TO *]'}
+        numFound = self._findNumFound(request, filter_query)
+        print(numFound)
+        stop = numFound
+        #stop = 1 # for testing
+        step = 50
+        files = list()
+        # Get results by data bundle
+        for i in range(0, stop, step):
+            results = self._solr.search(request, **{'rows':step, 'start':i, 'sort':'id DESC'})
+            files.extend(self._setFiles(results))
+        self.__setattr__('files', files) 
+
+    def _findNumFound(self, request, filter_query={'rows' : '0'}):
+        results = self._solr.search(request, **filter_query)
+        return results.hits
+
+    def _setFiles(self, results):
+        list_files = []
+        if not os.path.exists(self.corpus_dir):
+            os.makedirs(self.corpus_dir)
+        for result in results:
+            name_id = ''.join((result['id'].replace('http://','').replace('/','_'), '.txt'))
+            path='{}/{}'.format(self.corpus_dir, name_id)
+            if not os.path.exists('./{}'.format(path)):
+                mode = 'a'
+            else:
+                mode = 'w'
+            list_files.append((name_id, result['naked_texte']))
+            with open(path, mode) as f:
+                f.write(result['naked_texte'])
+        return list_files #, list_files_result
 
 
-def getLinkResult(list_files, list_files_result):
-    resp = getHttpResponse(s.allgo_url, 'POST', list_files)
-    url_id = resp['url']
-    job_id = resp['id']
-    resp ={}
-    resp_status = "in progress"
-    print("Inria Allgo processing your job : %s" % job_id)
-    while resp_status == 'in progress':
-        resp = getHttpResponse(url_id)
-        if resp.get('status') == 'in progress':
-            continue
-        else:
-            break
-    links = [(f, resp[str(job_id)]['{}'.format(f)]) for f in list_files_result]
-    return links
 
-def saveOutputFiles(links):
-    directory = ''.join((args.corpus, 'tag/'))
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-    for file_tag in links:
-        write_path='{}/{}'.format(directory, file_tag[0])
-        if not os.path.exists('./{}'.format(write_path)):
-            mode = 'a'
-        else:
-            mode = 'w'
-        with open('{}'.format(write_path), mode, encoding='iso-8859-1') as f:
-            f.write(getHttpResponse((file_tag[1]), content = 'NOT JSON'))
-        #latinToUnicode(write_path)
 
-def latinToUnicode(tmpfile):
-    BLOCKSIZE = 1024*1024
-    with open(tmpfile, 'r') as inf:
-        with open(tmpfile, 'w') as ouf:
-            while True:
-                data = inf.read(BLOCKSIZE)
-                if not data: break
-                converted = data.decode('latin1').encode('utf-8')
-                ouf.write(converted)
+class TextSource(DataSource):
+    def __init__(self):
+        super(TextSource, self).__init__()
+
+    def importSource():
+        files = list()
+        for file_name in os.listdir(self.corpus_dir):
+            path='{}/{}'.format(self.corpus_dir, file_name)
+            with open(path, 'r') as f:
+                lines = f.readlines()
+                print(len(lines))
+                if (len(lines)>1):
+                #In case of multi lines on one file REWRITE THE FILE
+                    single_line = '\t'.join([line.strip() for line in lines])
+                    f.write(single_line)
+                    file_tuple = (file_name, single_line)
+                else:
+                    file_tuple = (file_name, lines[0])
+                files.append(file_tuple)
+        self.__setattr__('files', files) 
+
+
+    
+
+
 
 if __name__ == '__main__':
-    importAndTag()
+    data_obj = factory() 
+    data_obj.importSource()
+    #data_obj.tagData() # Added Tag
+   # data.echoData() # Added analysis sentiment
+    data_obj.echoData()
 
