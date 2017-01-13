@@ -29,12 +29,10 @@ class DataSource(object):
         self.corpus_dir = args.corpus
 
     def importSource(self, *args):
-        files = self.data_source.importSource(*args)
-        self.__setattr__('files', files) 
+        raise 'Must be implemented in child class'
 
     def echoData(self):
         for name_id, opinion_txt in annotator.annotator(self.files).items():
-            print(name_id, opinion_txt)
             path='{}/{}'.format(self.corpus_dir, name_id)
             with open(path, 'r+') as f:
                 f.seek(0,2)
@@ -55,13 +53,14 @@ class DataSource(object):
                 f.seek(0,2)
                 f.write('\n{}'.format(data))
 
-
-
-def factory():
-    if args.datasource == 'solr':
-        return SolrSource()
-    elif args.datasource == 'text':
-        return TextSource()
+    def _setInOneLine(self, lines):
+        if len(lines) == 1:
+            return None
+        elif ((len(lines)) > 1):
+            return 
+        else:
+            raise 'Probably it is not a list'
+    
 
 class SolrSource(DataSource):
     def __init__(self):
@@ -102,36 +101,36 @@ class SolrSource(DataSource):
                 mode = 'w'
             list_files.append((name_id, result['naked_texte']))
             with open(path, mode) as f:
+                print(type(result['naked_text']))
                 f.write(result['naked_texte'])
+                #f.write(self._getInOneLine(result['naked_texte']))
         return list_files #, list_files_result
-
-
 
 
 class TextSource(DataSource):
     def __init__(self):
         super(TextSource, self).__init__()
 
-    def importSource():
+    def importSource(self):
         files = list()
         for file_name in os.listdir(self.corpus_dir):
             path='{}/{}'.format(self.corpus_dir, file_name)
-            with open(path, 'r') as f:
-                lines = f.readlines()
-                print(len(lines))
-                if (len(lines)>1):
-                #In case of multi lines on one file REWRITE THE FILE
-                    single_line = '\t'.join([line.strip() for line in lines])
-                    f.write(single_line)
-                    file_tuple = (file_name, single_line)
+            with open(path, 'r+') as f:
+                lines = f.readlines() 
+                if len(lines) == 1:
+                    text = lines[0]
                 else:
-                    file_tuple = (file_name, lines[0])
-                files.append(file_tuple)
+                    text = '\t'.join([line.strip() for line in lines])
+                    f.write(text)
+                files.append((file_name, text))
         self.__setattr__('files', files) 
 
 
-    
-
+def factory():
+    if args.datasource == 'solr':
+        return SolrSource()
+    elif args.datasource == 'text':
+        return TextSource()
 
 
 if __name__ == '__main__':
