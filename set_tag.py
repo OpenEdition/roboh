@@ -70,7 +70,7 @@ class SolrSource(DataSource):
 
     def importSource(self, writefile= True):
         platform = args.platform
-        request = 'platformID:%s AND site_name:"%s"' % (args.platform, args.site_name)
+        request = 'platformID:%s AND site_name:"%s" AND autodetect_lang:fr' % (args.platform, args.site_name)
         filter_query = {'fq':'naked_texte:[* TO *]'}
         numFound = self._findNumFound(request, filter_query)
         print(numFound)
@@ -101,9 +101,7 @@ class SolrSource(DataSource):
                 mode = 'w'
             list_files.append((name_id, result['naked_texte']))
             with open(path, mode) as f:
-                print(type(result['naked_text']))
                 f.write(result['naked_texte'])
-                #f.write(self._getInOneLine(result['naked_texte']))
         return list_files #, list_files_result
 
 
@@ -137,6 +135,5 @@ if __name__ == '__main__':
     data_obj = factory() 
     data_obj.importSource()
     #data_obj.tagData() # Added Tag
-   # data.echoData() # Added analysis sentiment
-    data_obj.echoData()
+    data_obj.echoData() # Added analysis sentiment
 
