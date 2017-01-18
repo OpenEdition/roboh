@@ -18,6 +18,7 @@ parser = argparse.ArgumentParser(description='set_tag by Mathieu Orban. Get text
 
 parser.add_argument('-d','--datasource', metavar='DATASOURCE', type=str, help='source required')
 parser.add_argument('-c','--corpus', metavar='MODES', type=str, help='corpus file path')
+parser.add_argument('-o','--output', metavar='OUTPUT', nargs='?', const='/tmp', type=str, help='output file path', default='/tmp')
 parser.add_argument('-s','--site_name', metavar='SITE', type=str, help='site_name of the journal')
 parser.add_argument('-p','--platform', metavar='PLATFORM', type=str, help='platform where you can find documents')
 args = parser.parse_args()
@@ -27,48 +28,51 @@ class DataSource(object):
     def __init__(self):
         self.source_name = args.datasource
         self.corpus_dir = args.corpus
+        self.output_dir = args.output
+        print(self.output_dir)
 
     def importSource(self, *args):
         raise 'Must be implemented in child class'
 
+    ##@brief Get text (path initialized in__init__) and   
+    # write opinion mining (json list of polarity order sentence by sentence) to the out__files
     def echoData(self):
         for name_id, opinion_txt in annotator.annotator(self.files).items():
-            path='{}/{}'.format(self.corpus_dir, name_id)
-            with open(path, 'r+') as f:
+            path_out = self._setPath(self.output_dir, name_id)
+            with open(path_out, 'r+') as f:
                 f.seek(0,2)
                 f.write('\n{}'.format(json.dumps(opinion_txt)))
 
+    ##@brief Get text (path initialized in__init__) and   
+    # write tagged text (with NERD) to the out_files
     def tagData(self):
         n = nerd.NERD('nerd.eurecom.fr', s.nerd_api_key)
         time_out = 30 
         for base_name, text in self.files:
-            path='{}/{}'.format(self.corpus_dir, base_name)
-            with open(path, 'r+') as f:
+            path_out = self._setPath(self.output_dir, name_id)
+            with open(path_out, 'r+') as f:
                 lines = f.readlines()
                 print(len(lines))
-                #In case of multi lines on one file
-                '''single_line = '\t'.join([line.strip() for line in lines])
-                f.write(single_line)'''
                 data = n.extract(text, 'combined', time_out)
                 f.seek(0,2)
                 f.write('\n{}'.format(data))
-
-    def _setInOneLine(self, lines):
-        if len(lines) == 1:
-            return None
-        elif ((len(lines)) > 1):
-            return 
-        else:
-            raise 'Probably it is not a list'
     
+    ##@brief Set a full path
+    # @param path_dir  st : directory
+    # @param file_name st
+    # @return st : the full path
+    def _setPath(self, path_dir, file_name):
+        return  '{}/{}'.format(path_dir, file_name)
+
 
 class SolrSource(DataSource):
     def __init__(self):
         super(SolrSource, self).__init__()
         self._solr =pysolr.Solr(s.solr_url, timeout=20)
-        
 
-    def importSource(self, writefile= True):
+    ##@brief Import documents from solr, add an attribute 'files' 
+    # and write document in two directory
+    def importSource(self):
         platform = args.platform
         request = 'platformID:%s AND site_name:"%s" AND autodetect_lang:fr' % (args.platform, args.site_name)
         filter_query = {'fq':'naked_texte:[* TO *]'}
@@ -84,24 +88,34 @@ class SolrSource(DataSource):
             files.extend(self._setFiles(results))
         self.__setattr__('files', files) 
 
+    ##@brief Get number of documents for a solr request 
+    # @param request  st : solr request
+    # @param filter_query  dict : solr filter query dictionnary
+    # @return int : number of documents
     def _findNumFound(self, request, filter_query={'rows' : '0'}):
         results = self._solr.search(request, **filter_query)
         return results.hits
 
+    ##@brief Get solr result. Write result in two directory
+    # file_in.txt and file_out.txt (which usefull later) 
+    # @param results  list : list of solr result (each result is a dict)
+    # @return list : list of tuple (file name, full naked_texte)
     def _setFiles(self, results):
         list_files = []
         if not os.path.exists(self.corpus_dir):
             os.makedirs(self.corpus_dir)
         for result in results:
             name_id = ''.join((result['id'].replace('http://','').replace('/','_'), '.txt'))
-            path='{}/{}'.format(self.corpus_dir, name_id)
-            if not os.path.exists('./{}'.format(path)):
+            path_in = self._setPath(self.corpus_dir, name_id)
+            path_out = self._setPath(self.output_dir, name_id)
+            if not os.path.exists('./{}'.format(path_in)):
                 mode = 'a'
             else:
                 mode = 'w'
             list_files.append((name_id, result['naked_texte']))
-            with open(path, mode) as f:
-                f.write(result['naked_texte'])
+            with open(path_in, mode) as f_witness, open(path_out, 'w') as f_job:
+                f_witness.write(result['naked_texte'])
+                f_job.write(result['naked_texte'])
         return list_files #, list_files_result
 
 
@@ -109,21 +123,24 @@ class TextSource(DataSource):
     def __init__(self):
         super(TextSource, self).__init__()
 
+    ##@brief Import documents from s text add an attribute 'files' 
+    # set in one line and write in output diretory
     def importSource(self):
         files = list()
         for file_name in os.listdir(self.corpus_dir):
-            path='{}/{}'.format(self.corpus_dir, file_name)
-            with open(path, 'r+') as f:
-                lines = f.readlines() 
+            path_in = self._setPath(self.corpus_dir, file_name)
+            path_out = self._setPath(self.output_dir, file_name)
+            with open(path_in, 'r') as f_read, open(path_out, 'w') as f_write:
+                lines = f_read.readlines() 
                 if len(lines) == 1:
                     text = lines[0]
                 else:
                     text = '\t'.join([line.strip() for line in lines])
-                    f.write(text)
+                f_write.write(text)
                 files.append((file_name, text))
         self.__setattr__('files', files) 
 
-
+##@brief factory function to initialize the right object
 def factory():
     if args.datasource == 'solr':
         return SolrSource()
