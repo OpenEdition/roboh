@@ -23,7 +23,8 @@ parser.add_argument('-s','--site_name', metavar='SITE', type=str, help='site_nam
 parser.add_argument('-p','--platform', metavar='PLATFORM', type=str, help='platform where you can find documents')
 args = parser.parse_args()
 
-
+##@brief Abstract class to represent data source
+#@see SolrSource TextSource
 class DataSource(object):
     def __init__(self):
         self.source_name = args.datasource

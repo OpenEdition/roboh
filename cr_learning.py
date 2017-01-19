@@ -12,6 +12,7 @@ from sklearn.metrics import precision_recall_fscore_support
 from sklearn.externals import joblib
 import pickle
 from sklearn.linear_model import SGDClassifier
+import json
 
     
 ##@brief Get files from a directory, files are splitten in 
@@ -36,8 +37,9 @@ def setLearning(dir_name='data/train/notag') :
     x_train = vectorizer.fit_transform(list_f)
     transformer = TfidfTransformer(norm='l2', use_idf=False)
     tfidf_train = transformer.fit_transform(x_train)
+    #X = addTagVector(tfidf_train, 'data/train/tag')
     X_tag = addTagVector(tfidf_train, 'data/train/tag')
-    X = addSentVector(X_tag, '/tmp')
+    X = addSentVector(X_tag, '/tmp/tag')
 
     #X=tfidf_train
     Y = getYVector('data/train/notag')
@@ -69,10 +71,9 @@ def loadIdfFeatures(list_f):
     return x_idf
 
 
-##@brief Train the classifier on texts's file stored in two directory
-# and save model in crmodel.pkl
+##@brief Append to matrix bag of words the tag column features
 # @param x_idf sparse.csr_matrix :  matrix will be convert in numpy array (not really good for memory...
-# @param dir_tag str : directory with same files with enhanced named entity tag
+# @param dir_tag str : directory (file and subdirectory must match with train witness file)
 # @param tag list : list of string tag
 # @return a new numpy array enhanced by new features
 # @todo handle properly path (not relative)
@@ -98,6 +99,13 @@ def addTagVector(x_idf, dir_tag, tag=['<pers>', '<time>', '<loc>']):
     return X
 
 
+##@brief Split text in 10 part and attribute a weight between (0, 1) for each part
+# @param entity_tag str : tag of name entity
+# @param txt_tag str : text to analyse
+# @param char_nbr int : number of charcter in the text
+# @param words_nbr int : number of word in the text
+# @return list (len(list)= =10, value = weight features)
+# @todo handle properly path (not relative)
 def addNedFeatures(entity_tag, txt_tag, char_nbr, words_nbr):
     index_pos = [match.start() for match in re.finditer(entity_tag, txt_tag)]
     list_feat = []
@@ -113,36 +121,34 @@ def addNedFeatures(entity_tag, txt_tag, char_nbr, words_nbr):
     return list_feat
 
 
-##@brief Train the classifier on texts's file stored in two directory
-# and save model in crmodel.pkl
+##@brief Split text in 10 part and attribute a weight between (0, 1) for each part
 # @param X numpy array:  matrix will be convert in numpy array (not really good for memory...
-# @param dir_tag str : directory with same files with enhanced sentiment analysis sentence by sentence
+# @param dir_sent str : directory with same files with enhanced sentiment analysis sentence by sentence
 # @param opinion list : list of string tag
-# @return a new numpy array enhanced by new features
-# @todo handle properly path (not relative)
-def addSentVector(x_idf, dir_sent, opinion=['positive', 'negative']):
+# @return numpy array (enhanced by new features)
+def addSentVector(X_in, dir_sent, opinion=['positive', 'negative']):
     #Ajout des features entités nommées. On regarde la fréquence de chaque
     list_f_tag = getFiles(dir_sent)
-    list_feat= []
+    row_feat= []
     for f in list_f_tag:
         with open (f, "r") as f_tag:
-            lst_tag = json.dumps(f_tag.readlines()[1])
-            print(type(lst_tag))
-        size = len(lst_tag)
-        step = int(size / 10)
-        for i in range(0, 10):
-            part_lst = [i*step:size]
-            
-        words_nbr = len(txt_tag.split())
-        row = []
-        for entity in tag:
-            row.extend(addNedFeatures(entity, txt_tag, char_nbr, words_nbr))
-        list_feat.append(row)
-    x_feat = np.array(list_feat)
+            lst_tag = json.loads(f_tag.readlines()[1])
+            list_feat= []
+            for i in range (1, 11):
+                nbr_element = 0
+                step = int(len(lst_tag) / 10)
+                nbr_element = sum (1 for value in lst_tag[i*step:(i+1)*step] if value in opinion)
+                if lst_tag:
+                    freq_el = round (nbr_element / len(lst_tag) , 2)
+                else :
+                    freq_el = 0.0
+                list_feat.append(freq_el)
+            row_feat.append(list_feat)
+    x_feat = np.array(row_feat)
     print(x_feat.shape)
-    print(x_idf.toarray().shape)
+    print(X_in.shape)
     #Ajout des features EN aux fichiers vectorisés
-    X = np.concatenate((x_feat, x_idf.toarray()), axis=1)
+    X = np.concatenate((x_feat, X_in), axis=1)
     print(X.shape)
     return X
 
