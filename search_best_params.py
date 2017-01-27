@@ -1,10 +1,12 @@
-from __future__ import print_function
+#!/usr/bin/env python
+
+
+
+from multiprocessing import cpu_count
 import numpy as np
 from pprint import pprint
 from time import time
 import logging
-import glob
-import re
 from sklearn.datasets import load_files
 from sklearn.feature_extraction.text import CountVectorizer,TfidfTransformer
 from sklearn.linear_model import SGDClassifier
@@ -35,7 +37,7 @@ parameters = {
     'tfidf__norm': ('l1', 'l2'),
     'tfidf__use_idf': (True, False),
     'tfidf__norm': ('l1', 'l2'),
-    'clf__loss' : ('hinge', 'log'),
+    'clf__loss' : ('hinge', 'log', 'modified_huber'),
     'clf__alpha': (0.00001, 0.000001),
     'clf__penalty': ('l2', 'elasticnet'),
     'clf__n_iter': (10, 50, 80),
@@ -46,16 +48,16 @@ parameters = {
 if __name__ == "__main__":
     #Get data train 
     categories=['CR', 'NCR']
-    print(categories)
-    data = load_files('./data/train/notag', categories=categories)
-    print("%d documents" % len(data))
-    print("%d categories" % len(data.target_names))
-    grid_search = GridSearchCV(pipeline, parameters, n_jobs = 12, verbose =1)
+    dataset = load_files('./data/train/notag', categories=categories)
+    print("%d documents" % len(dataset.data))
+    print("%d categories" % len(dataset.target_names))
+    jobs = int(cpu_count()*1.5)
+    grid_search = GridSearchCV(pipeline, parameters, n_jobs = jobs, verbose =1)
     print("Performing grid search...")
     print("pipeline:", [name for name, _ in pipeline.steps])
     print("parameters:")
     pprint(parameters)
-    X, Y = data.data, data.target
+    X, Y = dataset.data, dataset.target
     t0 = time()
     grid_search.fit(X, Y)
     print("done in %0.3fs" % (time() - t0))

@@ -1,2 +1,0 @@
-Document structuré : éclaircissements
-7ème cours Organisation des ressources &#38; accès aux ressources Document bien formé / valide. Exercices en XPATH. Ajout d'une feuille de style CSS à une feuille de style XSLT.

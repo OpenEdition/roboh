@@ -33,18 +33,18 @@ def getFiles(dir_name):
 def setLearning(dir_name='data/train/notag') :
     list_f = getFiles(dir_name)
     #Vectorize a bag of words and add term frequency (tfidf without idf) 
-    vectorizer = CountVectorizer(input='filename', ngram_range=(1,2), analyzer='word', max_df=0.5, max_features = 5000)
+    vectorizer = CountVectorizer(input='filename', ngram_range=(1,2), analyzer='word', stop_words = 'english', max_df=0.3, max_features = 5000)
     x_train = vectorizer.fit_transform(list_f)
-    transformer = TfidfTransformer(norm='l2', use_idf=False)
+    transformer = TfidfTransformer(norm='l1', use_idf=False)
     tfidf_train = transformer.fit_transform(x_train)
     #X = addTagVector(tfidf_train, 'data/train/tag')
     X_tag = addTagVector(tfidf_train, 'data/train/tag')
-    X = addSentVector(X_tag, '/tmp/tag')
+    X = addSentVector(X_tag, '/tmp/train/tag')
 
     #X=tfidf_train
     Y = getYVector('data/train/notag')
     print('\t Training...')
-    clf = SGDClassifier(alpha=1e-06, n_iter=50, penalty='l2', loss='hinge')
+    clf = SGDClassifier(alpha=1e-06, n_iter=50, penalty='l2', loss='log')
     clf.fit(X, Y)
 
     print('\t Scoring 5-fold cross-validation :')
@@ -91,8 +91,6 @@ def addTagVector(x_idf, dir_tag, tag=['<pers>', '<time>', '<loc>']):
             row.extend(addNedFeatures(entity, txt_tag, char_nbr, words_nbr))
         list_feat.append(row)
     x_feat = np.array(list_feat)
-    print(x_feat.shape)
-    print(x_idf.toarray().shape)
     #Ajout des features EN aux fichiers vectorisés
     X = np.concatenate((x_feat, x_idf.toarray()), axis=1)
     print(X.shape)
@@ -145,8 +143,6 @@ def addSentVector(X_in, dir_sent, opinion=['positive', 'negative']):
                 list_feat.append(freq_el)
             row_feat.append(list_feat)
     x_feat = np.array(row_feat)
-    print(x_feat.shape)
-    print(X_in.shape)
     #Ajout des features EN aux fichiers vectorisés
     X = np.concatenate((x_feat, X_in), axis=1)
     print(X.shape)
@@ -175,11 +171,12 @@ if __name__ == '__main__':
         list_f_test = getFiles('data/test/notag')
         x_test_idf = loadIdfFeatures(list_f_test)
         x_test = addTagVector(x_test_idf, dir_tag='data/test/tag')
+        X = addSentVector(x_test, '/tmp/test/tag')
         #prédiction à partir de x_test
-        predicted = clf.predict(x_test)
-        print(predicted, len(predicted))
+        predicted = clf.predict(X)
         y = getYVector('data/test/notag')
-        print(precision_recall_fscore_support(y, predicted, average='binary', pos_label=0))
+        #print(predicted, y)
+        print(precision_recall_fscore_support(y, predicted, average=None, labels=[0,1]))
     else:
         raise NameError('This datasource don\'t exit!')
 
