@@ -124,8 +124,9 @@ class TextSource(DataSource):
     def __init__(self):
         super(TextSource, self).__init__()
 
-    ##@brief Import documents from s text add an attribute 'files' 
-    # set in one line and write in output diretory
+    ##@brief Import documents from input directory, 
+    # add attribute 'files' (list of tuple file name, full naked_text) 
+    # and set in one line and write in output diretory
     def importSource(self):
         files = list()
         for file_name in os.listdir(self.corpus_dir):
