@@ -13,7 +13,6 @@ import settings as s
 from nerd import nerd
 from echosocket import annotator 
 
-
 parser = argparse.ArgumentParser(description='set_tag by Mathieu Orban. Get texts in Open Edition, saved them and tagged them.')
 
 parser.add_argument('-d','--datasource', metavar='DATASOURCE', type=str, help='source required')
@@ -47,14 +46,16 @@ class DataSource(object):
     ##@brief Get text (path initialized in__init__) and   
     # write tagged text (with NERD) to the out_files
     def tagData(self):
-        n = nerd.NERD('nerd.eurecom.fr', s.nerd_api_key)
+        n = nerd.NERD('http://cloud.science-miner.com/nerd', 'disambiguate')
         time_out = 30 
-        for base_name, text in self.files:
+        for name_id, text in self.files:
             path_out = self._setPath(self.output_dir, name_id)
             with open(path_out, 'r+') as f:
+                #check only one line
                 lines = f.readlines()
                 print(len(lines))
-                data = n.extract(text, 'combined', time_out)
+                response = n.query(text)
+                data = n.extract(response, text)
                 f.seek(0,2)
                 f.write('\n{}'.format(data))
     
@@ -153,6 +154,6 @@ def factory():
 if __name__ == '__main__':
     data_obj = factory() 
     data_obj.importSource()
-    #data_obj.tagData() # Added Tag
+    data_obj.tagData() # Added Tag
     data_obj.echoData() # Added analysis sentiment
 
