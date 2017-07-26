@@ -29,7 +29,6 @@ class DataSource(object):
         self.source_name = args.datasource
         self.corpus_dir = args.corpus
         self.output_dir = args.output
-        print(self.output_dir)
 
     def importSource(self, *args):
         raise 'Must be implemented in child class'
@@ -52,12 +51,20 @@ class DataSource(object):
             path_out = self._setPath(self.output_dir, name_id)
             with open(path_out, 'r+') as f:
                 #check only one line
-                lines = f.readlines()
-                print(len(lines))
-                response = n.query(text)
-                data = n.extract(response, text)
-                f.seek(0,2)
-                f.write('\n{}'.format(data))
+                #lines = f.readlines()
+                #print(len(lines))
+                data = text
+                try:
+                    response = n.query(text, debug=False)
+                    data = n.extract(response, text)
+                except nerd.LanguageException as err:
+                    print('This file %s is probably not in english, french or german. Error: %s' % (name_id, err))
+                except Exception as err:
+                    print('This file %s is occured an Exception error %s' % (name_id, err))
+                finally:
+                    f.seek(0,2)
+                    f.write('\n{}'.format(data))
+            print('This file {} was saved with entities tagged when it is possible'.format(name_id))
     
     ##@brief Set a full path
     # @param path_dir  st : directory

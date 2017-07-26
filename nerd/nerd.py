@@ -21,6 +21,9 @@ import json
 from io import BytesIO
 import os
 
+class LanguageException(Exception):
+    pass
+
 class NERD(object):
     """Connection to the NERD service.
     """
@@ -34,22 +37,23 @@ class NERD(object):
             ]
         self.url = endpoint + "".join(("/service/", action))
 
-    def query(self, text):
+    def query(self, text, debug=True):
         with open('result.json', 'w') as fp:
             json.dump({"text":text, "onlyNER":True}, fp)
-        c, buffer = self.init_curl('result.json')
+        c, buffer = self.init_curl('result.json', debug)
         response = self.getResponse(c, buffer)
-        print(response)
         return json.loads(response)
 
-    def init_curl(self, filename):
+    def init_curl(self, filename, debug=True):
         c = pycurl.Curl()
         buffer = BytesIO()
         c.setopt(c.WRITEDATA, buffer)
         c.setopt(c.POST, 1)
         c.setopt(c.HTTPHEADER, self._headers)
         c.setopt(c.URL, self.url)
-        c.setopt(c.VERBOSE, False)
+        if debug:
+            c.setopt(pycurl.VERBOSE, 1)
+            c.setopt(pycurl.DEBUGFUNCTION, test)
         send = [("query", (c.FORM_FILE, str(filename)))]
         c.setopt(c.HTTPPOST, send) 
         return c, buffer
@@ -61,8 +65,11 @@ class NERD(object):
 
         """ submit document """
         c.perform()
-        if c.getinfo(c.RESPONSE_CODE) != 200:
-            raise Exception("%s %s" % (c.RESPONSE_CODE, c.getinfo(c.RESPONSE_CODE)))
+        status = c.getinfo(c.RESPONSE_CODE)
+        if status  == 406: 
+            raise LanguageException("%d %s" % (status, "This language is not supported by nerd"))
+        if status  != 200: 
+            raise Exception("%d %s " % (status, "Try to debug..."))
         response = buffer.getvalue().decode('utf-8')
         c.close()
         return response
@@ -76,15 +83,8 @@ class NERD(object):
             end = entity["offsetEnd"] + str_gap
             text = text[:start] + tag_name + text[end:]
             str_gap = str_gap + 2 * len(entity['type']) + 5
-        print(text)
         return text
 
-def _debug(response, body):
-    """Print response headers and body for debug.
-    """
-    print(">>>", c.getinfo(c.RESPONSE_CODE, c.getinfo(pycurl.EFFECTIVE_URL)))
-    for h in response.getheaders():
-        print(h)
-    print()
-    print(body, "<<<")
+def test(debug_type, debug_msg):
+    print("debug(%d): %s" % (debug_type, debug_msg))
 

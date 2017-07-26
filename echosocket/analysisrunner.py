@@ -10,7 +10,8 @@ sys.path.append('../')
 import settings
 
 sys.path.append(settings.analysis_path)
-import sent_analysis
+data_path = settings.analysis_path + "data/"
+from sent_analysis import Echo
 import time
 import json
 import traceback
@@ -30,7 +31,7 @@ def runAnalysis(args):
         txt = args['txt_lst']
         old_stdout = sys.stdout
         with open('/dev/null', 'w') as sys.stdout: #deactivating sent-analysis output
-            result = sent_analysis.getResult(txt)
+            result = Echo(False, './model/reviewvocab.txt', './model/review.pkl').getResult(txt, data_path)
             sys.stdout = old_stdout
             print("END simpleLabeling on '{}'".format(args['id']))
     except Exception as e:
