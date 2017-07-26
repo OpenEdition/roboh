@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+__author__ = 'morban'
+__email__ = 'mathieu.orban@openedition.org'
 
 
 from multiprocessing import cpu_count

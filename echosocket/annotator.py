@@ -1,4 +1,8 @@
-__author__ = 'morban'
+#!/usr/bin/env python
+
+__author__ ='morban'
+__email__ = 'mathieu.orban@openedition.org'
+
 import re
 import sys
 import socket

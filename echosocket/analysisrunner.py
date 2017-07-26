@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 
 __author__ = 'morban'
+__email__ = 'mathieu.orban@openedition.org'
 
 
 import socket

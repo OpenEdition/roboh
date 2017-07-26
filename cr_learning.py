@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+__author__ ='morban'
+__email__ = 'mathieu.orban@openedition.org'
+
 import sys
 action = sys.argv[1]
 
