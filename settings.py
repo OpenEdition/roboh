@@ -18,6 +18,6 @@ sock_config_analysis = {
 
 
 #Settings to acces Sent-analysis on application server
-analysis_path = 'echo/' #Local machine
+analysis_path = './echo/' #Local machine
 
 
