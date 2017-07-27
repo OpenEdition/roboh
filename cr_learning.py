@@ -152,10 +152,10 @@ def addSentVector(X_in, dir_sent, opinion=['positive', 'negative']):
     return X
 
 
-    ##@brief Get the labeled matrix
-    # @param dir_name  st : relative path to directory.
-    # @return a numpy array of (nsample,) shape
-    # @todo handle properly path (not relative)
+##@brief Get the labeled matrix
+# @param dir_name  st : relative path to directory.
+# @return a numpy array of (nsample,) shape
+# @todo handle properly path (not relative)
 def getYVector(dir_name):
     list_f = glob.glob('{}/CR/*'.format(dir_name))
     list_f_NCR = glob.glob('{}/NCR/*'.format(dir_name))
