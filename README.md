@@ -1,4 +1,4 @@
-# roboh : Text Classifier
+# roboh : Text Classifier on book reviews
 
 roboh is a text classifier software. 
 roboh for (Review Of Books On Hypotheses) is dedicated to detect review of book on scientific article. Written in python 3, it is based on the famous scikit-learn machine learning library (http://scikit-learn.org/stable/index.html). 
