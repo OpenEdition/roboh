@@ -8,7 +8,7 @@ Dependencies for set_tag.py:
 ==========================-
 For set_tag.py:
 -------------
-	$pip3 install pysolr, pycurl
+	$pip3 install pysolr pycurl
 For module echo:
 ---------
 	You need to install the git sub-module echo (https://github.com/OpenEdition/echo).
@@ -18,4 +18,7 @@ For module echo:
 	Then follow the INSTALL process of echo repository.
 		https://github.com/OpenEdition/echo/blob/master/INSTALL.txt
 
+Dependencies for search_best_params.py:
+======================================
+	$pip3 install numpy scipy scikit-learn
 
