@@ -18,7 +18,7 @@ For module echo:
 	Then follow the INSTALL process of echo repository.
 		https://github.com/OpenEdition/echo/blob/master/INSTALL.txt
 
-Dependencies for search_best_params.py:
-======================================
+Dependencies for search_best_params.py, cr_learning.py:
+======================================================
 	$pip3 install numpy scipy scikit-learn
 
