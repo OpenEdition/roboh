@@ -84,7 +84,10 @@ class SolrSource(DataSource):
     # and write document in two directory
     def importSource(self):
         platform = args.platform
-        request = 'platformID:%s AND site_name:"%s" AND autodetect_lang:fr' % (args.platform, args.site_name)
+        if platform == 'HO':
+            request = 'platformID:"HO" AND siteid:"%s" AND autodetect_lang:fr' % (args.site_name)
+        else:
+            request = 'platformID:%s AND site_name:"%s" AND autodetect_lang:fr' % (args.platform, args.site_name)
         filter_query = {'fq':'naked_texte:[* TO *]'}
         numFound = self._findNumFound(request, filter_query)
         print(numFound)
