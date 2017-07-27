@@ -14,7 +14,7 @@ import settings as s
 from nerd import nerd
 from echosocket import annotator 
 
-parser = argparse.ArgumentParser(description='set_tag by Mathieu Orban. Get texts in Open Edition, saved them and tagged them.')
+parser = argparse.ArgumentParser(description='Get texts in Open Edition, saved them and tagged them.')
 
 parser.add_argument('-d','--datasource', metavar='DATASOURCE', type=str, help='source required')
 parser.add_argument('-c','--corpus', metavar='MODES', type=str, help='corpus file path')

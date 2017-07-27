@@ -1,26 +1,21 @@
-Each script can be manipulated on his own, you could therefore install dependencies SEPARATELY. It is suggested, notably because some dependency could be heavy and specially if you don(t use all the scripts.  
-
+Each script can be manipulated on his own, you could therefore install dependencies SEPARATELY. It is suggested, notably because some dependency could be heavy and specially if you don't use all the scripts.  
 
 General Dependencies:
 ====================
-
 	python3, python3-pip, libcurl4-openssl-dev, libssl-dev
 
-
-Dependencies for import.py:
+Dependencies for set_tag.py:
 ==========================-
-	pip3 install pysolr, pycurl
-	
+For set_tag.py:
+-------------
+	$pip3 install pysolr, pycurl
+For module echo:
+---------
 	You need to install the git sub-module echo (https://github.com/OpenEdition/echo).
-	echo is written in python2.7
-	For that :
 		$cd roboh/
 		$git submodule init
 		$git submodule update
-		Then follow the INSTALL process of echo repository.
-	
+	Then follow the INSTALL process of echo repository.
+		https://github.com/OpenEdition/echo/blob/master/INSTALL.txt
 
 
-	
-python analysisrunner.py
-	Install sub-module echo

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 __author__ = 'morban'
 __email__ = 'mathieu.orban@openedition.org'
@@ -14,6 +14,11 @@ from sklearn.feature_extraction.text import CountVectorizer,TfidfTransformer
 from sklearn.linear_model import SGDClassifier
 from sklearn.grid_search import GridSearchCV
 from sklearn.pipeline import Pipeline
+import argparse
+
+parser = argparse.ArgumentParser(description='Get best params for training. Give at the binary classifier one directory which contains two subdirectories')
+parser.add_argument('-d','--data_train', metavar='DATATRAIN', type=str, help='Path to directory. This directory contains 2 subdirectory. Each one is a category.')
+args = parser.parse_args()
 
 list_stop_words = []
 with open('stop_list_fr.txt', "r") as f:
@@ -50,7 +55,7 @@ parameters = {
 if __name__ == "__main__":
     #Get data train 
     categories=['CR', 'NCR']
-    dataset = load_files('./data/train/notag', categories=categories)
+    dataset = load_files(args.data_train, categories=categories)
     print("%d documents" % len(dataset.data))
     print("%d categories" % len(dataset.target_names))
     jobs = int(cpu_count()*1.5)
