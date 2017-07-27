@@ -1,0 +1,26 @@
+Each script can be manipulated on his own, you could therefore install dependencies SEPARATELY. It is suggested, notably because some dependency could be heavy and specially if you don(t use all the scripts.  
+
+
+General Dependencies:
+====================
+
+	python3, python3-pip, libcurl4-openssl-dev, libssl-dev
+
+
+Dependencies for import.py:
+==========================-
+	pip3 install pysolr, pycurl
+	
+	You need to install the git sub-module echo (https://github.com/OpenEdition/echo).
+	echo is written in python2.7
+	For that :
+		$cd roboh/
+		$git submodule init
+		$git submodule update
+		Then follow the INSTALL process of echo repository.
+	
+
+
+	
+python analysisrunner.py
+	Install sub-module echo
