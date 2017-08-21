@@ -37,7 +37,7 @@ Files generated:
 	In the output directory, you get all the files (each file keep his filename).Each file is divided by:
 		- One line is the naked text
 		- second line is the text with xml tag corresponding to the name entitities
-		- third line is a list of polarity (negative, neutre, positive) associated at each sentence of the thext.
+		- third line is a list of polarity (negative, neutre, positive) associated at each sentence of the text.
 Exemple:
 -------
 	To annotate all the text in a /tmp/test/CR/ directory and keep enhancement annotatetd in /tmp/tag, do:  
@@ -52,8 +52,42 @@ Note:
 *******************
 search_best_params.py 
 *******************
+Resume:
+------
+	This script is dedicated from a training dataset (text) to get:
+		- best classifier linear classifier (SVM, logistic regression...)
+		- best penalty for regularization (l1, l2...)
+		- best stop words
+		- best number of features (number of word). Only bag of words features is used.
+settings :
+---------
+	You need to specify dataset training (option -d).
+	AND OF COURSE, scikit-learn installed!!!
+runnning :
+---------
+	In your virtual env:
+	$python search_best_params.py -d path_to_training_dataset.....
+	It is running on a multiprocessing nevertheless it could take a long, long time!!! 
+Files generated:
+--------------
+	Output give you a resume of the best combination of parameters, features and classifier.
+Note:
+----
+	Modify the file list of stop word, could be improve the score
 
-
+*******************
+cr_learning.py 
+*******************
+Resume:
+------
+settings :
+---------
+runnning :
+---------
+Files generated:
+--------------
+Note:
+----
 
 *******************
 Full pipeline

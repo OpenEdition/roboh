@@ -11,7 +11,8 @@ The third one (cr_learning) concatenate features in a large matrix (numpy librar
 
 ## Contributors
 
-Mathieu Orban.
+Mathieu Orban
+mathieu.orban@openedition.org
 
 ## Installation
 
