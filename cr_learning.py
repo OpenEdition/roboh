@@ -17,12 +17,13 @@ import json
 import argparse
 parser = argparse.ArgumentParser(description='Training or inference script in order to classifiy review of book from an article on hypotheses.org platform')
 
-parser.add_argument('-s','--source', metavar='datasource', type=str, help='Path to datatset')
+parser.add_argument('-s','--dataset', metavar='dataset', type=str, help='Path to datatset')
 parser.add_argument('-a','--action', metavar='action', required=True, type=str, help='train or test .... Make your choice')
-parser.add_argument('-t','--tag_source', metavar='tag', type=str)
+parser.add_argument('-t','--tag_data', metavar='tag_data', type=str)
 parser.add_argument('-o','--output', metavar='output', type=str)
 
 
+args = parser.parse_args()
 
 
 ##@brief Get files from a directory, files are splitten in 
@@ -47,13 +48,13 @@ def setLearning(dir_name='data/train/notag') :
     x_train = vectorizer.fit_transform(list_f)
     transformer = TfidfTransformer(norm='l1', use_idf=False)
     tfidf_train = transformer.fit_transform(x_train)
-    tag_path = args.tag_path
+    tag_path = args.tag_data
     #X = addTagVector(tfidf_train, 'data/train/tag')
     X_tag = addTagVector(tfidf_train, tag_path)
     X = addSentVector(X_tag, tag_path)
 
     #X=tfidf_train
-    Y = getYVector('data/train/notag')
+    Y = getYVector(dir_name)
     print('\t Training...')
     clf = SGDClassifier(alpha=1e-06, n_iter=50, penalty='l2', loss='log')
     clf.fit(X, Y)
@@ -94,8 +95,7 @@ def addTagVector(x_idf, dir_tag, tag=['<PERSON>', '<PERIOD>', '<LOCATION>']):
     list_feat= []
     for f in list_f_tag:
         with open (f, "r") as f_tag:
-            txt_tag = picklines(f_tag, 2)[0]
-            print(txt_tag)
+            txt_tag = picklines(f_tag, [1])
         char_nbr = len(txt_tag)
         words_nbr = len(txt_tag.split())
         row = []
@@ -109,8 +109,8 @@ def addTagVector(x_idf, dir_tag, tag=['<PERSON>', '<PERIOD>', '<LOCATION>']):
     return X
 
 def picklines(file_object, lines_num):
-    return [x for i, x in enumerate(file_object) if i in lines_num]
-
+    pick_list = [x for i, x in enumerate(file_object) if i in lines_num]
+    return pick_list[0] if len(lines_num)==1 else picklist
 
 ##@brief Split text in 10 part and attribute a weight between (0, 1) for each part
 # @param entity_tag str : tag of name entity
@@ -145,7 +145,7 @@ def addSentVector(X_in, dir_sent, opinion=['positive', 'negative']):
     row_feat= []
     for f in list_f_tag:
         with open (f, "r") as f_tag:
-            lst_tag = json.loads(picklines(f_tag, 3)[0])
+            lst_tag = json.loads(picklines(f_tag, [2]))
             list_feat= []
             for i in range (1, 11):
                 nbr_element = 0
@@ -179,18 +179,20 @@ def getYVector(dir_name):
 
 
 if __name__ == '__main__':
+    dataset = args.dataset
     if args.action == 'train':
-        setLearning(args.datasource)
+        setLearning(dataset)
     elif args.action == 'test':
         clf = joblib.load('crmodel.pkl')
-        list_f_test = getFiles('data/test/notag')
+        list_f_test = getFiles(dataset)
         x_test_idf = loadIdfFeatures(list_f_test)
-        x_test = addTagVector(x_test_idf, dir_tag='data/test/tag')
-        X = addSentVector(x_test, '/tmp/test/tag')
+        tag_path = args.tag_data
+        x_test = addTagVector(x_test_idf, tag_path)
+        X = addSentVector(x_test, tag_path)
         #prédiction à partir de x_test
         predicted = clf.predict(X)
-        y = getYVector('data/test/notag')
-        #print(predicted, y)
+        y = getYVector(dataset)
+        print(predicted, y)
         print(precision_recall_fscore_support(y, predicted, average=None, labels=[0,1]))
     else:
         raise NameError('This datasource don\'t exit!')

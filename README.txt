@@ -82,10 +82,19 @@ cr_learning.py
 *******************
 Resume:
 ------
+	This script is dedicated to train or make inference for classify article as a review of book or not.
+	Remenber that you must tagged your text first with sentiment analysis and entity detection features.
+	Output : In train option, you generate a model.
 settings :
 ---------
+	
+
 runnning :
 ---------
+
+
+$python cr_learning.py -a test -s data/test/notag/ -t /tmp/test/
+	
 Files generated:
 --------------
 Note:
@@ -97,4 +106,9 @@ Full pipeline
 Resume:
 -----
 A full pipeline could be:
+	Launch bag of words fitting with search_best_params.py on your dataset
+	Then tag your text with entity detetcion and sentiment analysis (set_tag.py).
+	Run train with cr_learning.py
+	Make inference.
+
 
