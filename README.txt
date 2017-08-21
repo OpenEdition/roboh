@@ -26,8 +26,10 @@ settings :
 				-solr url in the settings.py
 runnning :
 ---------
-	LAUNCH SOCKET ECHO RUNNER FIRST:
-	For running this script you need ABSOLUTELY to launch in the echo virtual env:
+	LAUNCH SOCKET ECHO RUNNER FIRST.
+	For running this script you need ABSOLUTELY to launch echo.
+	SEE INSTALL.txt from (https://github.com/OpenEdition/echo) to activate echo virtual env
+	AND LAUNCH:
 		$(echovirtualenv)morban@morban:path_to/roboh/echosocket:python analysisrunner.py
 		This socket is running on multiprocess
 	Then you can run (not in echo virtualenv of course):

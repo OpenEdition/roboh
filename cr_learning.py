@@ -3,9 +3,6 @@
 __author__ ='morban'
 __email__ = 'mathieu.orban@openedition.org'
 
-import sys
-action = sys.argv[1]
-
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 import glob
 import numpy as np
@@ -17,9 +14,19 @@ import pickle
 from sklearn.linear_model import SGDClassifier
 import json
 
-    
+import argparse
+parser = argparse.ArgumentParser(description='Training or inference script in order to classifiy review of book from an article on hypotheses.org platform')
+
+parser.add_argument('-s','--source', metavar='datasource', type=str, help='Path to datatset')
+parser.add_argument('-a','--action', metavar='action', required=True, type=str, help='train or test .... Make your choice')
+parser.add_argument('-t','--tag_source', metavar='tag', type=str)
+parser.add_argument('-o','--output', metavar='output', type=str)
+
+
+
+
 ##@brief Get files from a directory, files are splitten in 
-# and two directores corresponding to their classification
+# and two directories corresponding to their classification
 # @param dir_name  st : relative path to directory
 # @todo handle properly path (not relative)
 # @return A list of path to files order by classification
@@ -40,9 +47,10 @@ def setLearning(dir_name='data/train/notag') :
     x_train = vectorizer.fit_transform(list_f)
     transformer = TfidfTransformer(norm='l1', use_idf=False)
     tfidf_train = transformer.fit_transform(x_train)
+    tag_path = args.tag_path
     #X = addTagVector(tfidf_train, 'data/train/tag')
-    X_tag = addTagVector(tfidf_train, 'data/train/tag')
-    X = addSentVector(X_tag, '/tmp/train/tag')
+    X_tag = addTagVector(tfidf_train, tag_path)
+    X = addSentVector(X_tag, tag_path)
 
     #X=tfidf_train
     Y = getYVector('data/train/notag')
@@ -80,13 +88,14 @@ def loadIdfFeatures(list_f):
 # @param tag list : list of string tag
 # @return a new numpy array enhanced by new features
 # @todo handle properly path (not relative)
-def addTagVector(x_idf, dir_tag, tag=['<pers>', '<time>', '<loc>']):
+def addTagVector(x_idf, dir_tag, tag=['<PERSON>', '<PERIOD>', '<LOCATION>']):
     #Ajout des features entités nommées. On regarde la fréquence de chaque
     list_f_tag = getFiles(dir_tag)
     list_feat= []
     for f in list_f_tag:
-        with open (f, "r", encoding='latin-1') as f_tag:
-            txt_tag = f_tag.read()
+        with open (f, "r") as f_tag:
+            txt_tag = picklines(f_tag, 2)[0]
+            print(txt_tag)
         char_nbr = len(txt_tag)
         words_nbr = len(txt_tag.split())
         row = []
@@ -98,6 +107,9 @@ def addTagVector(x_idf, dir_tag, tag=['<pers>', '<time>', '<loc>']):
     X = np.concatenate((x_feat, x_idf.toarray()), axis=1)
     print(X.shape)
     return X
+
+def picklines(file_object, lines_num):
+    return [x for i, x in enumerate(file_object) if i in lines_num]
 
 
 ##@brief Split text in 10 part and attribute a weight between (0, 1) for each part
@@ -133,7 +145,7 @@ def addSentVector(X_in, dir_sent, opinion=['positive', 'negative']):
     row_feat= []
     for f in list_f_tag:
         with open (f, "r") as f_tag:
-            lst_tag = json.loads(f_tag.readlines()[1])
+            lst_tag = json.loads(picklines(f_tag, 3)[0])
             list_feat= []
             for i in range (1, 11):
                 nbr_element = 0
@@ -167,9 +179,9 @@ def getYVector(dir_name):
 
 
 if __name__ == '__main__':
-    if action == 'train':
-        setLearning('data/train/notag')
-    elif action == 'test':
+    if args.action == 'train':
+        setLearning(args.datasource)
+    elif args.action == 'test':
         clf = joblib.load('crmodel.pkl')
         list_f_test = getFiles('data/test/notag')
         x_test_idf = loadIdfFeatures(list_f_test)

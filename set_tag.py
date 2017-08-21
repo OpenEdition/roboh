@@ -17,7 +17,7 @@ from echosocket import annotator
 parser = argparse.ArgumentParser(description='Get texts in Open Edition, saved them and tagged them.')
 
 parser.add_argument('-d','--datasource', metavar='DATASOURCE', type=str, help='source required')
-parser.add_argument('-c','--corpus', metavar='MODES', type=str, help='corpus file path')
+parser.add_argument('-c','--corpus', metavar='CORPUS', type=str, help='corpus file path')
 parser.add_argument('-o','--output', metavar='OUTPUT', nargs='?', const='/tmp', type=str, help='output file path', default='/tmp')
 parser.add_argument('-s','--site_name', metavar='SITE', type=str, help='site_name of the journal')
 parser.add_argument('-p','--platform', metavar='PLATFORM', type=str, help='platform where you can find documents')
