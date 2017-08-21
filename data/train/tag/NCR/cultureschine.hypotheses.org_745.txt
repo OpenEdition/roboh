@@ -1,2 +1,0 @@
-<timex><time>Le Nouvel An</time></timex> chinois à <enamex><loc>Paris</loc></enamex>. Sur les scènes de l'altérité
-Parution d'un article de Wang Jing, étudiante à l'EHESS, membre du Laboratoire d'Anthropologie et d'Histoire de l'<enamex><organization>Institution de la Culture et</organization></enamex> membre de l'équipe "Les religions des Chinois de <enamex><loc>France</loc></enamex>" <enamex><organization>Groupe Soci</organization></enamex>étés, Religions, Laïcités dans Gradhiva, revue du Musée du Quai <enamex><pers>Branly</pers></enamex>.
