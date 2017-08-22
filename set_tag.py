@@ -13,12 +13,14 @@ import argparse
 import settings as s
 from nerd import nerd
 from echosocket import annotator 
+import sys, traceback
 
 parser = argparse.ArgumentParser(description='Get texts in Open Edition, saved them and tagged them.')
 
 parser.add_argument('-d','--datasource', metavar='DATASOURCE', type=str, help='source required')
 parser.add_argument('-c','--corpus', metavar='CORPUS', type=str, help='corpus file path')
 parser.add_argument('-o','--output', metavar='OUTPUT', nargs='?', const='/tmp', type=str, help='output file path', default='/tmp')
+parser.add_argument('-i','--id_url', metavar='ID_url', type=str, help='site_name of the journal')
 parser.add_argument('-s','--site_name', metavar='SITE', type=str, help='site_name of the journal')
 parser.add_argument('-p','--platform', metavar='PLATFORM', type=str, help='platform where you can find documents')
 args = parser.parse_args()
@@ -83,14 +85,18 @@ class SolrSource(DataSource):
     ##@brief Import documents from solr, add an attribute 'files' 
     # and write document in two directory
     def importSource(self):
-        platform = args.platform
-        if platform == 'HO':
-            request = 'platformID:"HO" AND siteid:"%s" AND autodetect_lang:fr' % (args.site_name)
+        if args.id_url:
+            url = args.id_url
+            url = url.rstrip()
+            request = 'id:"{}"'.format(url)
         else:
-            request = 'platformID:%s AND site_name:"%s" AND autodetect_lang:fr' % (args.platform, args.site_name)
+            platform = args.platform
+            if platform == 'HO':
+                request = 'platformID:"HO" AND siteid:"%s" AND autodetect_lang:fr' % (args.site_name)
+            else:
+                request = 'platformID:%s AND site_name:"%s" AND autodetect_lang:fr' % (args.platform, args.site_name)
         filter_query = {'fq':'naked_texte:[* TO *]'}
         numFound = self._findNumFound(request, filter_query)
-        print(numFound)
         stop = numFound
         #stop = 1 # for testing
         step = 50

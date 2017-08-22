@@ -71,11 +71,12 @@ class NERD(object):
     def extract(self, data, text):
         str_gap = 0
         for entity in data["entities"]:
-            tag_name = "".join(('<', entity['type'], '>', entity['rawName'], '<\\', entity['type'], '>'))
+            category = entity.get('type', 'NO_TYPE')
+            tag_name = "".join(('<', category, '>', entity['rawName'], '<\\', category, '>'))
             start = entity["offsetStart"] + str_gap
             end = entity["offsetEnd"] + str_gap
             text = text[:start] + tag_name + text[end:]
-            str_gap = str_gap + 2 * len(entity['type']) + 5
+            str_gap = str_gap + 2 * len(category) + 5
         return text
 
 def test(debug_type, debug_msg):
