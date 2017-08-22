@@ -84,16 +84,12 @@ Resume:
 ------
 	This script is dedicated to train or make inference for classify article as a review of book or not.
 	Remenber that you must tagged your text first with sentiment analysis and entity detection features.
-	Output : In train option, you generate a model.
+	Output : In train option, you generate a model (crmodel.pkl).
 settings :
 ---------
-	
-
 runnning :
 ---------
-
-
-$python cr_learning.py -a test -s data/test/notag/ -t /tmp/test/
+	$python cr_learning.py -a test -s data/test/notag/ -t /tmp/test/
 	
 Files generated:
 --------------
