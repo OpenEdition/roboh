@@ -8,6 +8,8 @@ usage() {
 		exit 1
 }
 
+ve2() { source ../bin/activate; }
+
 ACTION='test'
 OUTPUT='tmp/tag'
 while :
@@ -39,13 +41,26 @@ do
 	esac
 done
 
-ve2() { source ../bin/activate; }
 
-/bin/bash -x annotator.sh > annotator.txt &
+RUNNER=$(ps auxf | grep analysisrunner | awk '{print $12}' | grep python)
+if [ "$RUNNER" == "" ]
+then
+	# Activate first venv with python 2.7 and launch socket servor in a new bash process
+	bash -c "source echo/bin/activate && cd ./echosocket && python ./analysisrunner.py && python --version &" 1>&3
+else
+	echo "RUNNER is already working";
+fi
 
+# Activate second venv with python 3.4
 ve2
-echo `python --version`
+py_v=$(python --version)
+echo "$py_v"
 #echo `python set_tag.py -d text -c $FILE -o $OUTPUT` 1>&3 | $output 1>&2 | cat 3&>1
-echo `python set_tag.py -d text -c $FILE -o $OUTPUT`
-echo `python cr_learning.py -a $ACTION -s $FILE -t $OUTPUT`
+tag=$(python set_tag.py -d text -c $FILE -o $OUTPUT) 3>&1
+echo "tag $tag" 
+learn=$(python cr_learning.py -a $ACTION -s $FILE -t $OUTPUT)
+echo "learn $learn"
+
+
+
 
