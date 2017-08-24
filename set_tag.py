@@ -25,14 +25,23 @@ parser.add_argument('-s','--site_name', metavar='SITE', type=str, help='site_nam
 parser.add_argument('-p','--platform', metavar='PLATFORM', type=str, help='platform where you can find documents')
 args = parser.parse_args()
 
+
+class Path_error(Exception):
+    """Base class for exceptions in this module."""
+    pass
+
+class Level_error(Exception):
+    """Base class for exceptions in this module."""
+    pass
+
+
 ##@brief Abstract class to represent data source
 #@see SolrSource TextSource
 class DataSource(object):
-    def __init__(self):
-        self.source_name = args.datasource
-        self.corpus_dir = args.corpus
-        self.output_dir = args.output
-
+    def __init__(self, corpus, output):
+        self.corpus_dir = corpus
+        self.output_dir = output
+        
     def importSource(self, *args):
         raise 'Must be implemented in child class'
 
@@ -79,7 +88,7 @@ class DataSource(object):
 
 class SolrSource(DataSource):
     def __init__(self):
-        super(SolrSource, self).__init__()
+        super(SolrSource, self).__init__(args.corpus, args.output)
         self._solr =pysolr.Solr(s.solr_url, timeout=20)
 
     ##@brief Import documents from solr, add an attribute 'files' 
@@ -139,8 +148,8 @@ class SolrSource(DataSource):
 
 
 class TextSource(DataSource):
-    def __init__(self):
-        super(TextSource, self).__init__()
+    def __init__(self, source, target):
+        super(TextSource, self).__init__(source, target)
 
     ##@brief Import documents from input directory, 
     # add attribute 'files' (list of tuple file name, full naked_text) 
@@ -163,14 +172,43 @@ class TextSource(DataSource):
 ##@brief factory function to initialize the right object
 def factory():
     if args.datasource == 'solr':
-        return SolrSource()
+        return [SolrSource()]
     elif args.datasource == 'text':
-        return TextSource()
+        return _checkDir(args.corpus, args.output)
 
+def _checkDir(source, target):
+    files = [f for f in os.listdir(source) if os.path.isfile(os.path.join(source, f))]
+    dirs = [d for d in os.listdir(source) if os.path.isdir(os.path.join(source, d))]
+    if ((dirs and files) or not (dirs or files)):
+        msg = 'You must have at least one directory or one file but not the both: {}, {}'.format(files, dirs)
+        raise Path_error(msg)
+    if files and level=='end':
+        data_list.append(TextSource(source, target))
+    if (dirs):
+        for d in dirs:
+            targ = os.path.join(target, d)
+            dest = os.path.join(source, d)
+            os.mkdir(targ, 0o755)
+            print('Dir {} is created'.format(targ))
+            _checkSubDir(dest, targ)
+    return data_list
+
+def _checkSubDir(source, target):
+    files = [f for f in os.listdir(source) if os.path.isfile(os.path.join(source, f))]
+    dirs = [d for d in os.listdir(source) if os.path.isdir(os.path.join(source, d))]
+    if ((dirs and files) or not (dirs or files)):
+        msg = 'You must have at least one directory or one file but not the both: {}, {}'.format(files, dirs)
+        raise Path_error(msg)
+    if files:
+        return data_list.append(TextSource(source, target))
+    if dirs:
+        raise Level_error('Only one level of subdirectories')
+        
 
 if __name__ == '__main__':
-    data_obj = factory() 
-    data_obj.importSource()
-    data_obj.tagData() # Added Tag
-    data_obj.echoData() # Added analysis sentiment
+    data_list = list()
+    for data_source in factory():
+        data_source.importSource()
+        data_source.tagData() # Added Tag
+        data_source.echoData() # Added analysis sentiment
 
