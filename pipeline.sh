@@ -1,10 +1,10 @@
 #!/bin/bash
 
 usage() {
-	echo "Check response when set a wrong args in CORE API"
+	echo "This script is dedicated to make alone the full pipeline for train or test roboh "
 		echo "Usage : $0 [-h|--help] [-d|--dataset] [-a| --action] [-o| --output]"
 		echo -e "\n\t-h --help\tprint this help\n\t-d --dataset\tpath to the dataset
-		\n\t-o --output\tpath to directroy where files is tagged\taction test by default (arg not mandatory)  \n\n"
+		\n\t-o --output\tpath to directroy where files is tagged\t-a --action\action test by default (arg not mandatory)  \n\n"
 		exit 1
 }
 
@@ -46,7 +46,7 @@ RUNNER=$(ps auxf | grep analysisrunner | awk '{print $12}' | grep python)
 if [ "$RUNNER" == "" ]
 then
 	# Activate first venv with python 2.7 and launch socket servor in a new bash process
-	bash -c "source echo/bin/activate && cd ./echosocket && python ./analysisrunner.py && python --version &" 1>&3
+	bash -c "source echo/bin/activate && cd ./echosocket && python ./analysisrunner.py | sed -e 's/^/ECHO TAGGING: \t/' &" 
 else
 	echo "RUNNER is already working";
 fi
@@ -54,12 +54,16 @@ fi
 # Activate second venv with python 3.4
 ve2
 py_v=$(python --version)
-echo "$py_v"
-#echo `python set_tag.py -d text -c $FILE -o $OUTPUT` 1>&3 | $output 1>&2 | cat 3&>1
-tag=$(python set_tag.py -d text -c $FILE -o $OUTPUT) 3>&1
-echo "tag $tag" 
-learn=$(python cr_learning.py -a $ACTION -s $FILE -t $OUTPUT)
-echo "learn $learn"
+#echo "$py_v"
+echo "Wait a few moment... And be patient!!"
+tag=$(python set_tag.py -d text -c $FILE -o $OUTPUT | sed -e "s/^/NERD TAGGING: \t/")
+echo "$tag"
+
+PIDS=$(ps auxf | grep analysisrunner | grep -v source | grep -v grep | awk '{print $2}' | head -n 1)
+kill $PIDS
+
+learn=$(python cr_learning.py -a $ACTION -s $FILE -t $OUTPUT | sed -e "s/^/RESULT: \t/")
+echo "$learn"
 
 
 

@@ -17,7 +17,7 @@ Resume:
 	In text case only the output 2 is given.
 settings :
 ---------
-	You need to specify datasource (-d text or solr).
+	You need to specify type of datasource (-d text or solr).
 	text case specifiy: 	-corpus directory (-c).
 				-output directory (-o)
 	solr case specify: 	-corpus directory (-c).
@@ -104,7 +104,9 @@ Resume:
 A full pipeline could be:
 	Launch bag of words fitting with search_best_params.py on your dataset
 	Then tag your text with entity detetcion and sentiment analysis (set_tag.py).
-	Run train with cr_learning.py
-	Make inference.
+	Run train (or test) with cr_learning.py
+running :
+------- 
+	bash pipeline.sh -a test -d data/test/ -o /tmp/tag :
 
 

@@ -160,7 +160,6 @@ def addSentVector(X_in, dir_sent, opinion=['positive', 'negative']):
     x_feat = np.array(row_feat)
     #Ajout des features EN aux fichiers vectorisés
     X = np.concatenate((x_feat, X_in), axis=1)
-    print(X.shape)
     return X
 
 
@@ -192,8 +191,10 @@ if __name__ == '__main__':
         #prédiction à partir de x_test
         predicted = clf.predict(X)
         y = getYVector(dataset)
-        print(predicted, y)
-        print(precision_recall_fscore_support(y, predicted, average=None, labels=[0,1]))
+        print('DATASET TEST: \n{}'.format(y))
+        print('DATA PREDICTED: \n{}'.format(predicted))
+        print('Precision, Recall, Fscore, (Num Review, num not review)') 
+        print(precision_recall_fscore_support(y, predicted, average=None, labels=[1,0]))
     else:
         raise NameError('This datasource don\'t exit!')
 
