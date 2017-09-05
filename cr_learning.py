@@ -79,7 +79,6 @@ def loadIdfFeatures(list_f):
     vec_words = vectorizer.fit_transform(list_f)
     transformer = TfidfTransformer(norm='l2', use_idf=False)
     x_idf = transformer.fit_transform(vec_words)
-    print(x_idf.shape)
     return x_idf
 
 
@@ -105,7 +104,6 @@ def addTagVector(x_idf, dir_tag, tag=['<PERSON>', '<PERIOD>', '<LOCATION>']):
     x_feat = np.array(list_feat)
     #Ajout des features EN aux fichiers vectorisés
     X = np.concatenate((x_feat, x_idf.toarray()), axis=1)
-    print(X.shape)
     return X
 
 def picklines(file_object, lines_num):
@@ -193,8 +191,11 @@ if __name__ == '__main__':
         y = getYVector(dataset)
         print('DATASET TEST: \n{}'.format(y))
         print('DATA PREDICTED: \n{}'.format(predicted))
-        print('Precision, Recall, Fscore, (Num Review, num not review)') 
-        print(precision_recall_fscore_support(y, predicted, average=None, labels=[1,0]))
+        precision, recall, f_score, support =precision_recall_fscore_support(y, predicted, average=None, labels=[1,0])
+        print("CR,  NCR: {}".format(support))
+        print("Precision: {}".format(precision))
+        print("Recall: {}".format(recall))
+        print("F_score: {}".format(f_score))
     else:
         raise NameError('This datasource don\'t exit!')
 
