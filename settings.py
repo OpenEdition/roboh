@@ -1,7 +1,7 @@
 import socket
 
 # Path to solr source
-solr_url  = 'http://147.94.102.65:8983/solr/documents'
+solr_url  = 'http://solr_url_path/solr/documents'
 
 
 # Socket configuration

@@ -1,6 +1,5 @@
 """
     nerd -   A python library which provides an interface to NERD
-                    http://nerd.eurecom.fr
 """
 
 __author__ = "morban"
