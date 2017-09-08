@@ -44,9 +44,9 @@ def getFiles(dir_name):
 def setLearning(dir_name='data/train/notag') :
     list_f = getFiles(dir_name)
     #Vectorize a bag of words and add term frequency (tfidf without idf) 
-    vectorizer = CountVectorizer(input='filename', ngram_range=(1,2), analyzer='word', stop_words = 'english', max_df=0.3, max_features = 5000)
+    vectorizer = CountVectorizer(input='filename', ngram_range=(1,1), analyzer='word', stop_words = 'english', max_df=0.5, max_features = 3000)
     x_train = vectorizer.fit_transform(list_f)
-    transformer = TfidfTransformer(norm='l1', use_idf=False)
+    transformer = TfidfTransformer(norm='l2', use_idf=True)
     tfidf_train = transformer.fit_transform(x_train)
     tag_path = args.tag_data
     #X = addTagVector(tfidf_train, 'data/train/tag')
@@ -56,7 +56,7 @@ def setLearning(dir_name='data/train/notag') :
     #X=tfidf_train
     Y = getYVector(dir_name)
     print('\t Training...')
-    clf = SGDClassifier(alpha=1e-06, n_iter=50, penalty='l2', loss='log')
+    clf = SGDClassifier(alpha=1e-05, n_iter=50, penalty='elasticnet', loss='log')
     clf.fit(X, Y)
 
     print('\t Scoring 5-fold cross-validation :')
