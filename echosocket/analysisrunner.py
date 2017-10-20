@@ -12,7 +12,7 @@ sys.path.append('../')
 import settings
 
 sys.path.append(settings.analysis_path)
-data_path = settings.analysis_path + "data/"
+data_path = settings.analysis_path
 from sent_analysis import Echo
 import time
 import json

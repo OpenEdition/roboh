@@ -108,6 +108,6 @@ A full pipeline could be:
 	Run train (or test) with cr_learning.py
 running :
 ------- 
-	bash pipeline.sh -a test -d data/test/ -o /tmp/tag :
+	bash pipeline.sh -a train -d data/train/ -o /tmp/tag :
 
 
