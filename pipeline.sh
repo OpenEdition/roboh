@@ -8,7 +8,7 @@ usage() {
 		exit 1
 }
 
-ve2() { source ../bin/activate; }
+ve2() { source ./bin/activate; }
 
 ACTION='test'
 OUTPUT='tmp/tag'

@@ -24,6 +24,7 @@ settings :
 				-output directory (-o)
 				-platform and site name (-p and -s)).
 				-solr url in the settings.py
+	You need to specify in settings.py the path to echo.
 runnning :
 ---------
 	LAUNCH SOCKET ECHO RUNNER FIRST.

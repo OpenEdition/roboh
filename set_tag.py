@@ -57,7 +57,7 @@ class DataSource(object):
     ##@brief Get text (path initialized in__init__) and   
     # write tagged text (with NERD) to the out_files
     def tagData(self):
-        n = nerd.NERD('http://cloud.science-miner.com/nerd', 'disambiguate')
+        n = nerd.NERD('http://nerd.huma-num.fr/nerd', 'disambiguate')
         time_out = 30 
         for name_id, text in self.files:
             path_out = self._setPath(self.output_dir, name_id)

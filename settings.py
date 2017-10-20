@@ -18,6 +18,5 @@ sock_config_analysis = {
 
 
 #Settings to acces Sent-analysis on application server
-analysis_path = '/data/echoVE/echo/' #Local machine
-
+analysis_path = 'path_to/roboh/echo/' #Local machine
 
